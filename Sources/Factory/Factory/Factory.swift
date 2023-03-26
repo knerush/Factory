@@ -73,7 +73,9 @@ public struct Factory<T>: FactoryModifying {
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping () -> T) {
-        self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        //self.registration = FactoryRegistration<Void,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.container = container
+        self.newRegistration = container.manager.registration(id: "\(container.self).\(key)", factory: factory)
     }
 
     /// Evaluates the factory and returns an object or service of the desired type. The resolved instance may be brand new or Factory may
@@ -102,12 +104,12 @@ public struct Factory<T>: FactoryModifying {
     /// ```
     /// - Returns: An object or service of the desired type.
     public func callAsFunction() -> T {
-        registration.resolve(with: ())
+        newRegistration.resolve(container: container, parameters: ())
     }
 
     /// Unsugared resolution function.
     public func resolve() -> T {
-        registration.resolve(with: ())
+        newRegistration.resolve(container: container, parameters: ())
     }
 
     /// Registers a new factory closure capable of producing an object or service of the desired type.
@@ -134,13 +136,15 @@ public struct Factory<T>: FactoryModifying {
     /// Allows updating registered factory and scope.
     @discardableResult
     public func register(factory: @escaping () -> T) -> Self {
-        registration.register(factory)
+        newRegistration.register(container: container, factory: factory)
         return self
     }
 
     /// Internal parameters for this Factory including id, container, the factory closure itself, the scope,
     /// and others.
-    public var registration: FactoryRegistration<Void,T>
+    //public var registration: FactoryRegistration<Void,T>
+    public var newRegistration: NewFactoryRegistration<Void,T>
+    public var container: ManagedContainer
 
 }
 
@@ -199,7 +203,9 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///   - key: Hidden value used to differentiate different instances of the same type in the same container.
     ///   - factory: A factory closure that produces an object of the desired type when required.
     public init(_ container: ManagedContainer, key: String = #function, _ factory: @escaping (P) -> T) {
-        self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        // self.registration = FactoryRegistration<P,T>(id: "\(container.self).\(key)", container: container, factory: factory)
+        self.container = container
+        self.newRegistration = container.manager.registration(id: "\(container.self).\(key)", factory: factory)
     }
 
     /// Resolves a factory capable of taking parameters at runtime.
@@ -207,12 +213,12 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     /// let service = container.parameterService(16)
     /// ```
     public func callAsFunction(_ parameters: P) -> T {
-        registration.resolve(with: parameters)
+        newRegistration.resolve(container: container, parameters: parameters)
     }
 
     /// Unsugared resolution function.
     public func resolve(_ parameters: P) -> T {
-        registration.resolve(with: parameters)
+        newRegistration.resolve(container: container, parameters: parameters)
     }
 
     /// Registers a new factory capable of taking parameters at runtime.
@@ -225,11 +231,13 @@ public struct ParameterFactory<P,T>: FactoryModifying {
     ///  - factory: A new factory closure that produces an object of the desired type when needed.
     @discardableResult
     public func register(factory: @escaping (P) -> T) -> Self {
-        registration.register(factory)
+        newRegistration.register(container: container, factory: factory)
         return self
     }
 
     /// Required registration
-    public var registration: FactoryRegistration<P,T>
+    // public var registration: FactoryRegistration<P,T>
+    public var newRegistration: NewFactoryRegistration<P,T>
+    public var container: ManagedContainer
 
 }

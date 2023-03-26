@@ -33,6 +33,30 @@ internal var globalRecursiveLock = NSRecursiveLock()
 
 // MARK: - Internal Variables
 
+//final class ReadWriteLock {
+//    private var rwlock: pthread_rwlock_t = {
+//        var rwlock = pthread_rwlock_t()
+//        pthread_rwlock_init(&rwlock, nil)
+//        return rwlock
+//    }()
+//
+//    deinit {
+//        pthread_rwlock_destroy(&rwlock)
+//    }
+//
+//    func writeLock() {
+//        pthread_rwlock_wrlock(&rwlock)
+//    }
+//
+//    func readLock() {
+//        pthread_rwlock_rdlock(&rwlock)
+//    }
+//
+//    func unlock() {
+//        pthread_rwlock_unlock(&rwlock)
+//    }
+//}
+
 /// Master graph resolution depth counter
 internal var globalGraphResolutionDepth = 0
 

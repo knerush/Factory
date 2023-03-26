@@ -141,10 +141,31 @@ extension ManagedContainer {
 public final class ContainerManager {
 
     /// Public initializer
-    public init() {}
+    public init() {
+        pthread_rwlock_init(&rwlock, nil)
+    }
+
+    deinit {
+        pthread_rwlock_destroy(&rwlock)
+    }
 
     /// Default scope
     public var defaultScope: Scope?
+
+    internal func registration<P,T>(id: String, factory: @escaping (P) -> T) -> NewFactoryRegistration<P,T> {
+        readLock()
+        if let registration = newRegistrations[id] as? NewFactoryRegistration<P,T> {
+            registration.once = false // reset flag for this iteration
+            unlock()
+            return registration
+        }
+        unlock()
+        let registration = NewFactoryRegistration<P,T>(id: id, factory: factory)
+        writeLock()
+        newRegistrations[id] = registration
+        unlock()
+        return registration
+    }
 
     #if DEBUG
     /// Public variable exposing dependency chain test maximum
@@ -168,6 +189,8 @@ public final class ContainerManager {
 
     /// Alias for Factory registration map.
     internal typealias FactoryMap = [String:AnyFactory]
+    /// Alias for Factory registration map.
+    internal typealias FactoryRegistrationMap = [String:AnyRegistration]
     /// Alias for Factory options map.
     internal typealias FactoryOptionsMap = [String:FactoryOptions]
     /// Alias for Factory once set.
@@ -179,12 +202,29 @@ public final class ContainerManager {
     internal var autoRegistrationCheckNeeded = true
     /// Updated registrations for Factory's.
     internal lazy var registrations: FactoryMap = .init(minimumCapacity: 32)
+    /// Updated registrations for Factory's.
+    internal lazy var newRegistrations: FactoryRegistrationMap = .init(minimumCapacity: 32)
     /// Updated options for Factory's.
     internal lazy var options: FactoryOptionsMap = .init(minimumCapacity: 32)
     /// Scope cache for Factory's managed by this container.
     internal lazy var cache: Scope.Cache = Scope.Cache()
     /// Push/Pop stack for registrations, options, cache, and so on.
     internal lazy var stack: [(FactoryMap, FactoryOptionsMap, Scope.Cache.CacheMap, Bool)] = []
+
+    internal var rwlock: pthread_rwlock_t = pthread_rwlock_t()
+
+    func writeLock() {
+        pthread_rwlock_wrlock(&rwlock)
+    }
+
+    func readLock() {
+        pthread_rwlock_rdlock(&rwlock)
+    }
+
+    func unlock() {
+        pthread_rwlock_unlock(&rwlock)
+    }
+
 
 }
 

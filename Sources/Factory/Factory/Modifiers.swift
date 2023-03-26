@@ -33,7 +33,9 @@ public protocol FactoryModifying {
     /// The return type of the Factory's dependency.
     associatedtype T
     /// Internal information that describes this Factory.
-    var registration: FactoryRegistration<P,T> { get set }
+    // var registration: FactoryRegistration<P,T> { get set }
+    var newRegistration: NewFactoryRegistration<P,T> { get }
+    var container: ManagedContainer { get }
 }
 
 // FactoryModifying Scope Functionality
@@ -48,7 +50,7 @@ extension FactoryModifying {
     /// ```
     @discardableResult
     public func scope(_ scope: Scope) -> Self {
-        registration.scope(scope)
+        newRegistration.scope(container: container, scope: scope)
         return self
     }
     /// Syntactic sugar defines this Factory's dependency scope to be cached. See ``Scope/Cached-swift.class``.
@@ -122,7 +124,7 @@ extension FactoryModifying {
     /// As shown, decorator can come in handy when you need to perform some operation or manipulation after the fact.
     @discardableResult
     public func decorator(_ decorator: @escaping (_ instance: T) -> Void) -> Self {
-        registration.decorator(decorator)
+        newRegistration.decorator(decorator)
         return self
     }
 }
@@ -139,10 +141,10 @@ extension FactoryModifying {
     public func context(_ context: FactoryContext, factory: @escaping (P) -> T) -> Self {
         switch context {
         case .arg, .args, .device, .simulator:
-            registration.context(context, id: registration.id, factory: factory)
+            newRegistration.context(context, factory: factory)
         default:
             #if DEBUG
-            registration.context(context, id: registration.id, factory: factory)
+            newRegistration.context(context, factory: factory)
             #endif
         }
         return self
@@ -190,12 +192,9 @@ extension FactoryModifying {
     /// Adds ability to mutate Factory on first instantiation only.
     @discardableResult
     public func once() -> Self {
-        registration.options { options in
-            options.once = true
-        }
-        var mutable = self
-        mutable.registration.once = true
-        return mutable
+        newRegistration.once = true
+        newRegistration.onceHasOccurred = true
+        return self
     }
 }
 
@@ -205,7 +204,7 @@ extension FactoryModifying {
     /// Resets the Factory's behavior to its original state, removing any registrations and clearing any cached items from the specified scope.
     /// - Parameter options: options description
     public func reset(_ options: FactoryResetOptions = .all) {
-        registration.reset(options: options)
+        newRegistration.reset(container: container, options: options)
     }
 }
 
@@ -219,8 +218,8 @@ extension FactoryModifying {
     @available(*, deprecated, message: "Use container.service.scope(.cached).register { Service() } instead")
     @discardableResult
     public func register(scope: Scope?, factory: @escaping (P) -> T) -> Self {
-        registration.register(factory)
-        registration.scope(scope)
+        newRegistration.register(container: container, factory: factory)
+        newRegistration.scope(container: container, scope: scope)
         return self
     }
 }
