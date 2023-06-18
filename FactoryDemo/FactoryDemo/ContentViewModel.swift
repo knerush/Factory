@@ -9,15 +9,17 @@ import Foundation
 import Factory
 import Common
 import Networking
+import Observation
 
-class ContentViewModel: ObservableObject {
+@Observable
+class ContentViewModel { //}: ObservableObject {
 
-    @Injected(\.myServiceType) private var service
-    @Injected(\.networkType) private var network
+    @ObservationIgnored @Injected(\.myServiceType) private var service
+    @ObservationIgnored @Injected(\.networkType) private var network
 
     private let simpleService = Container.shared.simpleService()
 
-    @Published var name: String = "Michael"
+    var name: String = "Michael"
 
     init() {
         print("ContentViewModel Initialized")
@@ -52,7 +54,7 @@ class ContentViewModel: ObservableObject {
         }
     }
 
-    @InjectedType private var simple: SimpleService?
+    @ObservationIgnored @InjectedType private var simple: SimpleService?
 
     func testResolving() {
         let c = Container.shared

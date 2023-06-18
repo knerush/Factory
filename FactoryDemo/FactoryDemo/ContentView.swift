@@ -10,7 +10,8 @@ import Factory
 
 struct ContentView: View {
 
-    @InjectedObject(\.contentViewModel) var model: ContentViewModel
+    //@InjectedObject(\.contentViewModel)
+    @State var model: ContentViewModel = Container.shared.contentViewModel()
 
     var body: some View {
         List {
@@ -77,7 +78,8 @@ struct outerView: View {
 }
 
 struct ChildContentView: View {
-    @ObservedObject var model: ContentViewModel
+    //@ObservedObject
+    var model: ContentViewModel
     var body: some View {
         Text(model.text() + " for \(model.name)")
     }
