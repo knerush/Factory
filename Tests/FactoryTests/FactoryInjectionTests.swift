@@ -235,7 +235,7 @@ final class FactoryInjectionTests: XCTestCase {
     }
 
     @available(iOS 14, *)
-    func testInjectedType() throws {
+    func testInjectedTypes() throws {
         let vm1 = ResolvingViewModel()
         XCTAssertNil(vm1.service1)
         XCTAssertNil(vm1.service2)
@@ -245,9 +245,67 @@ final class FactoryInjectionTests: XCTestCase {
         let vm2 = ResolvingViewModel()
         XCTAssertNotNil(vm2.service1)
         XCTAssertNotNil(vm2.service2)
+        XCTAssertEqual(vm2.lazyTypeInjectedService1?.text(), "MyService")
         vm2.service1 = nil
         XCTAssertNil(vm2.service1)
     }
+
+    @available(iOS 14, *)
+    func testLazyInjectedTypes() throws {
+        let vm1 = ResolvingViewModel()
+        XCTAssertNil(vm1.lazyTypeInjectedService1)
+        XCTAssertNil(vm1.lazyTypeInjectedService2)
+        Container.shared.register {
+            MyService()
+        }
+        let vm2 = ResolvingViewModel()
+        XCTAssertNil(vm2.$lazyTypeInjectedService1.resolvedOrNil())
+        XCTAssertNotNil(vm2.lazyTypeInjectedService1)
+        XCTAssertNotNil(vm2.lazyTypeInjectedService2)
+        XCTAssertEqual(vm2.lazyTypeInjectedService1?.text(), "MyService")
+        vm2.lazyTypeInjectedService1 = nil
+        vm2.lazyTypeInjectedService2 = nil
+        XCTAssertNil(vm2.lazyTypeInjectedService1)
+        XCTAssertNil(vm2.lazyTypeInjectedService2)
+    }
+
+    @available(iOS 14, *)
+    func testWeakLazyInjectedTypes() throws {
+        let vm1 = ResolvingViewModel()
+        XCTAssertNil(vm1.service1)
+        XCTAssertNil(vm1.weakLazyTypeInjectedService1)
+        XCTAssertNil(vm1.weakLazyTypeInjectedService2)
+        Container.shared.register {
+            MyService()
+        }.scope(.shared)
+        let vm2 = ResolvingViewModel()
+        XCTAssertNil(vm2.$weakLazyTypeInjectedService1.resolvedOrNil())
+        XCTAssertNotNil(vm2.service1)
+        XCTAssertNotNil(vm2.weakLazyTypeInjectedService1)
+        XCTAssertNotNil(vm2.weakLazyTypeInjectedService2)
+        XCTAssertEqual(vm2.weakLazyTypeInjectedService1?.text(), "MyService")
+        vm2.service1 = nil
+        vm2.service2 = nil
+        vm2.weakLazyTypeInjectedService1 = nil
+        vm2.explicitlyUnwrappedInjectedService = nil
+        XCTAssertNil(vm2.service1)
+        XCTAssertNil(vm2.weakLazyTypeInjectedService1)
+        XCTAssertNil(vm2.weakLazyTypeInjectedService2)
+    }
+
+    @available(iOS 14, *)
+    func testExplicitlyUnwrappedInjectedService() throws {
+        let vm1 = ResolvingViewModel()
+        XCTAssertNil(vm1.explicitlyUnwrappedInjectedService)
+        Container.shared.register {
+            MyService()
+        }
+        let vm2 = ResolvingViewModel()
+        XCTAssertNotNil(vm2.explicitlyUnwrappedInjectedService)
+        vm2.explicitlyUnwrappedInjectedService = nil
+        XCTAssertNil(vm2.explicitlyUnwrappedInjectedService)
+    }
+
 
     #if canImport(SwiftUI)
     @available(iOS 14, *)
@@ -294,8 +352,18 @@ extension CustomContainer {
 
 @available(iOS 14, *)
 class ResolvingViewModel: ObservableObject {
+
     @InjectedType var service1: MyService?
     @InjectedType(Container.shared) var service2: MyService?
+
+    @LazyInjectedType var lazyTypeInjectedService1: MyService?
+    @LazyInjectedType(Container.shared) var lazyTypeInjectedService2: MyService?
+
+    @WeakLazyInjectedType var weakLazyTypeInjectedService1: MyService?
+    @WeakLazyInjectedType(Container.shared) var weakLazyTypeInjectedService2: MyService?
+
+    @InjectedType var explicitlyUnwrappedInjectedService: MyService!
+
 }
 
 extension Container: Resolving {}
