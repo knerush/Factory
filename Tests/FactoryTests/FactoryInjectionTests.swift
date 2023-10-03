@@ -2,7 +2,6 @@ import XCTest
 
 #if canImport(SwiftUI)
 import SwiftUI
-#endif
 
 @testable import Factory
 
@@ -306,8 +305,6 @@ final class FactoryInjectionTests: XCTestCase {
         XCTAssertNil(vm2.explicitlyUnwrappedInjectedService)
     }
 
-
-    #if canImport(SwiftUI)
     @available(iOS 14, *)
     @MainActor
     func testInjectedObject() throws {
@@ -327,11 +324,8 @@ final class FactoryInjectionTests: XCTestCase {
         let projected = i3.projectedValue
         XCTAssertNotNil(projected)
     }
-    #endif
 
 }
-
-#if canImport(SwiftUI)
 @available(iOS 14, *)
 class ContentViewModel: ObservableObject {
     @Published var text = "Test"
@@ -348,7 +342,6 @@ extension CustomContainer {
         self { ContentViewModel() }
     }
 }
-#endif
 
 @available(iOS 14, *)
 class ResolvingViewModel: ObservableObject {
@@ -367,3 +360,5 @@ class ResolvingViewModel: ObservableObject {
 }
 
 extension Container: Resolving {}
+
+#endif
