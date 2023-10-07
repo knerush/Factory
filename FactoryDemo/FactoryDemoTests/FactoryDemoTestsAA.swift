@@ -24,9 +24,11 @@ final class FactoryDemoTestsAA: XCTestCase {
     func testMockRegister() {
         let precache = AAViewModel()
         XCTAssertEqual(precache.name, "DefaultService")
-        AAContainer.shared.service.register {
-            AAMockService()
-        }
+        AAContainer.shared.service
+            .register {
+                AAMockService()
+            }
+            .reset(.scope)
         let sut = AAViewModel()
         XCTAssertEqual(sut.name, "MockService")
     }
@@ -34,9 +36,11 @@ final class FactoryDemoTestsAA: XCTestCase {
     func testMockTest() {
         let precache = AAViewModel()
         XCTAssertEqual(precache.name, "DefaultService")
-        AAContainer.shared.service.onTest {
-            AAMockService()
-        }
+        AAContainer.shared.service
+            .onTest {
+                AAMockService()
+            }
+            .reset(.scope)
         let sut = AAViewModel()
         XCTAssertEqual(sut.name, "MockService")
     }

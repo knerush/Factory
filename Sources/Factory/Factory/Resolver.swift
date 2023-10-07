@@ -192,8 +192,7 @@ extension ParameterFactory {
     }
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: LazyInjectedType<T> {
-        get { return self }
-        mutating set { self = newValue }
+        self
     }
     /// Projected function returns resolved instance if it exists.
     ///
@@ -237,8 +236,7 @@ extension ParameterFactory {
     }
     /// Unwraps the property wrapper granting access to the resolve/reset function.
     public var projectedValue: WeakLazyInjectedType<T> {
-        get { return self }
-        mutating set { self = newValue }
+        self
     }
     /// Projected function returns resolved instance if it exists.
     ///
